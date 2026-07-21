@@ -166,7 +166,7 @@ function endRun(){
   writeShared(d => { d.phase="dead"; d.best=best; });
   el("best").textContent=best;
   g.shake=1; g.flash=1;
-  showOverlay("WALLED IN","score "+g.score,"vote or press a key to run again");
+  showOverlay("cinema dash","score "+g.score,"vote or press a key to run again");
 }
 function showOverlay(t,b,s){ el("ovTitle").textContent=t; el("ovBig").textContent=b; el("ovSub").innerHTML=s; el("overlay").classList.remove("hidden"); }
 
