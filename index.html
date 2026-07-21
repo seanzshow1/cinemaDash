@@ -6,127 +6,352 @@
 <title>Run to the Movies — Display</title>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+
 <style>
   :root{
-    --bg:#1a0a16; --panel:#2a1424; --edge:#5a2c48;
-    --cyan:#ffd23f; --magenta:#ff5470; --yellow:#ffe6a8; --green:#5CF285;
-    --ink:#f6e9e0; --dim:#a07d90;
+    --bg:#100d0d;
+    --panel:#1a1514;
+    --panel-2:#211b19;
+    --edge:#4d3d38;
+    --cream:#f3e7cf;
+    --gold:#d8b46a;
+    --red:#9f2f2f;
+    --red-deep:#6d1d1d;
+    --ink:#f7f1e8;
+    --dim:#a99c91;
   }
+
   *{box-sizing:border-box}
-  html,body{margin:0;height:100%;background:var(--bg);
-    color:var(--ink);font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;-webkit-font-smoothing:none}
-  body{display:flex;align-items:center;justify-content:center;padding:18px;overflow:hidden}
-  .cab{width:min(520px,100%,calc((100dvh - 230px)*0.8));display:flex;flex-direction:column;gap:12px}
-  .head{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
-  .title{font-family:'Press Start 2P',monospace;font-size:11px;color:var(--cyan);text-shadow:0 0 14px rgba(255,210,63,.5);line-height:1.5}
-  .title span{color:var(--magenta);text-shadow:0 0 14px rgba(255,84,112,.5)}
-  .stats{display:flex;gap:16px;font-size:11px;color:var(--dim);letter-spacing:.14em;white-space:nowrap}
-  .stats b{color:var(--yellow);font-variant-numeric:tabular-nums}
-  .screen{position:relative;border:2px solid var(--edge);overflow:hidden;
-    box-shadow:0 0 0 1px #0a0a18,0 0 32px rgba(255,210,63,.12),0 24px 60px -30px rgba(0,0,0,.9);
-    aspect-ratio:4/5;background:#120610}
-  canvas{display:block;width:100%;height:100%;image-rendering:pixelated}
-  .overlay{position:absolute;inset:0;z-index:3;display:grid;place-content:center;gap:14px;text-align:center;
-    background:rgba(10,10,24,.82);padding:24px}
-  .overlay h2{margin:0;font-family:'Press Start 2P',monospace;font-size:20px;color:var(--yellow);text-shadow:3px 3px 0 #0a0a18,0 0 22px rgba(252,233,79,.45)}
-  .overlay p{margin:0;font-size:12px;color:var(--dim);line-height:1.8}
-  .overlay .big{color:var(--ink);font-size:12px;letter-spacing:.1em}
-  .overlay code{color:var(--cyan);background:#0c0c20;border:1px solid var(--edge);padding:2px 6px;word-break:break-all}
+
+  html,body{
+    margin:0;
+    min-height:100%;
+    background:
+      radial-gradient(circle at top, rgba(159,47,47,.14), transparent 38%),
+      linear-gradient(180deg,#171111 0%,var(--bg) 100%);
+    color:var(--ink);
+    font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  }
+
+  body{
+    display:flex;
+    justify-content:center;
+    padding:24px 16px 36px;
+  }
+
+  .cab{
+    width:min(520px,100%);
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+  }
+
+  .head{
+    display:flex;
+    align-items:flex-end;
+    justify-content:space-between;
+    gap:16px;
+    padding:0 2px;
+  }
+
+  .title{
+    font-family:'Press Start 2P',monospace;
+    font-size:10px;
+    line-height:1.6;
+    color:var(--cream);
+    letter-spacing:.02em;
+  }
+
+  .title span{
+    color:var(--gold);
+  }
+
+  .stats{
+    display:flex;
+    gap:14px;
+    font-size:10px;
+    color:var(--dim);
+    letter-spacing:.08em;
+    white-space:nowrap;
+  }
+
+  .stats b{
+    color:var(--cream);
+    font-variant-numeric:tabular-nums;
+  }
+
+  .screen{
+    position:relative;
+    overflow:hidden;
+    border:1px solid var(--edge);
+    border-radius:4px;
+    background:#0c0909;
+    box-shadow:0 18px 50px rgba(0,0,0,.45);
+    aspect-ratio:4/5;
+  }
+
+  .screen::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    z-index:1;
+    pointer-events:none;
+    box-shadow:inset 0 0 0 10px rgba(0,0,0,.12);
+  }
+
+  canvas{
+    display:block;
+    width:100%;
+    height:100%;
+    image-rendering:pixelated;
+  }
+
+  .overlay{
+    position:absolute;
+    inset:0;
+    z-index:3;
+    display:grid;
+    place-content:center;
+    gap:13px;
+    text-align:center;
+    background:rgba(10,8,8,.82);
+    padding:28px;
+  }
+
+  .overlay h2{
+    margin:0;
+    font-family:'Press Start 2P',monospace;
+    font-size:18px;
+    color:var(--cream);
+  }
+
+  .overlay p{
+    margin:0;
+    font-size:11px;
+    color:var(--dim);
+    line-height:1.7;
+  }
+
+  .overlay .big{
+    color:var(--ink);
+    font-size:11px;
+    letter-spacing:.06em;
+  }
+
+  .overlay code{
+    color:var(--gold);
+    background:#15100f;
+    border:1px solid var(--edge);
+    padding:2px 6px;
+    word-break:break-all;
+  }
+
   .hidden{display:none}
-  .tick{display:flex;align-items:center;gap:10px;font-size:10px;color:var(--dim);letter-spacing:.14em}
-  .tick .rail{flex:1;height:6px;background:#0c0c20;border:1px solid var(--edge);overflow:hidden}
-  .tick .fill{height:100%;width:0%;background:linear-gradient(90deg,var(--cyan),var(--yellow))}
-  .live{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-  .live .cell{position:relative;border:2px solid var(--edge);background:var(--panel);
-    padding:10px 14px;overflow:hidden;display:flex;align-items:center;gap:10px;font-size:12px;letter-spacing:.1em}
-  .live .bar{position:absolute;inset:0 auto 0 0;width:0%;background:rgba(255,210,63,.15);transition:width .1s ease}
-  .live .dive .bar{background:rgba(255,84,112,.15)}
-  .live .glyph{position:relative;z-index:1;font-weight:800;font-size:14px}
-  .live .flap .glyph{color:var(--cyan)} .live .dive .glyph{color:var(--magenta)}
-  .live .label{position:relative;z-index:1;font-family:'Press Start 2P',monospace;font-size:9px}
-  .live .flap .label{color:var(--cyan)} .live .dive .label{color:var(--magenta)}
-  .live .count{position:relative;z-index:1;margin-left:auto;font-variant-numeric:tabular-nums;color:var(--dim)}
-  .foot{font-size:10px;color:var(--dim);text-align:center;letter-spacing:.06em;line-height:1.8}
-  .foot span{color:var(--cyan)} .foot b{color:var(--yellow);font-weight:700}
-  .conn{font-size:10px;color:var(--dim);letter-spacing:.1em;text-align:center}
-  .conn.bad{color:var(--magenta)}
-  /* THIS WAY marquee sign, fixed to the right edge — points to the cinema */
-  .sign{position:absolute;right:0;top:44%;transform:translateY(-50%);z-index:2;
-    display:flex;flex-direction:column;align-items:center;gap:5px;
-    padding:8px 6px 8px 8px;background:#2a0f18;
-    border:2px solid var(--yellow);border-right:none;border-radius:6px 0 0 6px;
-    box-shadow:0 0 14px rgba(255,210,63,.35), inset 0 0 0 2px #120610;
-    animation:signGlow 1.1s steps(2) infinite}
-  @keyframes signGlow{0%{border-color:var(--yellow)}50%{border-color:#c9a15e}}
-  .sign .word{font-family:'Press Start 2P',monospace;font-size:8px;color:var(--yellow);
-    writing-mode:vertical-rl;text-orientation:upright;letter-spacing:2px;text-shadow:1px 1px 0 #120610}
-  .sign .arrow{font-size:16px;color:var(--magenta);line-height:1;text-shadow:0 0 8px rgba(255,84,112,.6)}
-  .sign .cinema{font-family:'Press Start 2P',monospace;font-size:6px;color:var(--dim);writing-mode:vertical-rl}
+
+  .sign{
+    position:absolute;
+    right:10px;
+    top:14px;
+    z-index:2;
+    display:flex;
+    align-items:center;
+    gap:6px;
+    padding:6px 8px;
+    background:rgba(22,16,15,.88);
+    border:1px solid var(--gold);
+    border-radius:3px;
+  }
+
+  .sign .cinema{
+    display:none;
+  }
+
+  .sign .word{
+    font-family:'Press Start 2P',monospace;
+    font-size:7px;
+    color:var(--cream);
+    writing-mode:horizontal-tb;
+    letter-spacing:0;
+  }
+
+  .sign .arrow{
+    font-size:13px;
+    color:var(--red);
+    line-height:1;
+  }
+
+  .tick{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-size:9px;
+    color:var(--dim);
+    letter-spacing:.08em;
+  }
+
+  .tick .rail{
+    flex:1;
+    height:4px;
+    background:#171211;
+    border:1px solid var(--edge);
+    overflow:hidden;
+  }
+
+  .tick .fill{
+    height:100%;
+    width:0%;
+    background:var(--gold);
+  }
+
+  .live{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:8px;
+  }
+
+  .live .cell{
+    position:relative;
+    overflow:hidden;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding:10px 12px;
+    border:1px solid var(--edge);
+    border-radius:3px;
+    background:var(--panel);
+    font-size:11px;
+  }
+
+  .live .bar{
+    position:absolute;
+    inset:0 auto 0 0;
+    width:0%;
+    background:rgba(216,180,106,.12);
+    transition:width .1s ease;
+  }
+
+  .live .dive .bar{
+    background:rgba(159,47,47,.14);
+  }
+
+  .live .glyph,
+  .live .label,
+  .live .count{
+    position:relative;
+    z-index:1;
+  }
+
+  .live .glyph{
+    font-size:13px;
+    color:var(--gold);
+  }
+
+  .live .dive .glyph{
+    color:#cf7770;
+  }
+
+  .live .label{
+    font-family:'Press Start 2P',monospace;
+    font-size:8px;
+    color:var(--cream);
+  }
+
+  .live .count{
+    margin-left:auto;
+    color:var(--dim);
+    font-variant-numeric:tabular-nums;
+  }
 
   .controller-access{
     display:grid;
-    grid-template-columns:auto 1fr;
+    grid-template-columns:86px 1fr;
     align-items:center;
     gap:14px;
-    padding:12px;
-    border:2px solid var(--edge);
-    background:var(--panel);
+    padding:14px;
+    border:1px solid var(--edge);
+    border-radius:4px;
+    background:var(--panel-2);
   }
+
   .controller-qr{
-    width:92px;
-    height:92px;
+    width:86px;
+    height:86px;
     display:block;
     padding:5px;
     background:#fff;
+    border-radius:2px;
     image-rendering:auto;
   }
+
   .controller-copy{
     min-width:0;
     display:flex;
     flex-direction:column;
     align-items:flex-start;
-    gap:9px;
+    gap:10px;
   }
+
   .controller-copy p{
     margin:0;
     color:var(--dim);
     font-size:10px;
     line-height:1.6;
-    letter-spacing:.06em;
+    letter-spacing:.04em;
   }
+
   .controller-button{
     display:inline-block;
-    padding:11px 14px;
-    border:2px solid var(--yellow);
-    background:#2a0f18;
-    color:var(--yellow);
+    padding:10px 13px;
+    border:1px solid var(--gold);
+    border-radius:3px;
+    background:var(--red-deep);
+    color:var(--cream);
     font-family:'Press Start 2P',monospace;
-    font-size:8px;
+    font-size:7px;
     line-height:1.5;
     text-decoration:none;
     text-align:center;
-    box-shadow:3px 3px 0 #120610,0 0 14px rgba(255,210,63,.22);
-  }
-  .controller-button:hover,
-  .controller-button:focus-visible{
-    color:var(--bg);
-    background:var(--yellow);
-    outline:none;
-  }
-  @media (max-height:760px), (max-width:430px){
-    .controller-access{grid-template-columns:72px 1fr;gap:10px;padding:9px}
-    .controller-qr{width:72px;height:72px}
-    .controller-button{padding:9px 10px;font-size:7px}
-    .controller-copy p{font-size:9px}
   }
 
+  .controller-button:hover,
+  .controller-button:focus-visible{
+    background:var(--red);
+    outline:none;
+  }
+
+  .foot,
+  .conn{
+    text-align:center;
+    color:var(--dim);
+    font-size:9px;
+    line-height:1.7;
+    letter-spacing:.04em;
+  }
+
+  .foot span,
+  .foot b{
+    color:var(--cream);
+  }
+
+  .conn.bad{
+    color:#cf7770;
+  }
+
+  @media (max-width:430px){
+    body{padding:14px 10px 24px}
+    .stats{gap:8px;font-size:9px}
+    .controller-access{grid-template-columns:72px 1fr;gap:10px;padding:10px}
+    .controller-qr{width:72px;height:72px}
+    .controller-button{padding:9px 10px}
+  }
 </style>
+
   <link rel="icon" type="image/gif" href="/popcorn.gif">
 </head>
 <body>
   <div class="cab">
     <div class="head">
-      <div class="title">RUN TO<br><span>THE MOVIES</span></div>
+      <div class="title">CINEMA<br><span>DASH</span></div>
       <div class="stats">
         <div>SCORE <b id="score">0</b></div>
         <div>BEST <b id="best">0</b></div>
@@ -164,14 +389,14 @@
     <div class="controller-access">
       <img class="controller-qr" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAUgAAAFIAQAAAAAab1qeAAACF0lEQVR4nO2a7YrjMAxF7132/V/5zA99JB1YaAaytTMqtE3rA7aFrSvJNnrz9eddcMghhxzyV5B/JcnxjCQjC8nkc7fsMqMF7CmksKqRsCyMX1q2mdESpG1JsuRck2HYbllknJuRIBlE+4D/2fvzyFyLloQw/ybv6P0JZPjPcJNyaBBIFvFn23SXGa1gz9rcmBR2LHMI/E29P4/093wzrIhkrHPjLjNagAxZd7hPy7Uu8azPi+RpvyPh9JrxlOb0xPMXSYRoCQpdcqi8yyWsMM5NSIQtLNdWNzrkfplx7kKGGSv2JIUdgY7QfoFx7kNiyEqIqigSGXzm8YuMc3myNrawwoXWu/P4tPIuM1qARMiAhQWWkDOP7wxpgXFuRKKwoHrTh0PF38k7en8O6Soid6Ez/GZZ1pmCfnqcu5DpPzm50Kwhc7ROPH+NJOvyED9sOQrJdhRF1xjnNiSZCem81VvZJ/68XP9UaVG+iKRp8qOrZJ9vVk1eR/BJGXTO466RmVmSLpSsgbgc6uj722TKuCsf4vjK0JPR96v27B+q4nxU6EUFoR8f5y6kTzLU2uO+IBK+c/b72+TL/RCrrZdZEccB5y4zWoKMWyB5kyGXq1WR/d29P5UMKSJXJVVhmvzohyT1ddTqj0POhca5MPlyPyQvNLjDJuVR3V29P48U0MbMzzJhCxIAu8xogXjpY70POeSQQ+5LfgGiGvZ/i0FgaQAAAABJRU5ErkJggg==" alt="QR code for the Cinema Dash controller">
       <div class="controller-copy">
-        <p>SCAN TO JOIN, OR OPEN THE CONTROLLER ON THIS DEVICE.</p>
+        <p>SCAN TO JOIN THE AUDIENCE, OR OPEN THE CONTROLLER.</p>
         <a class="controller-button" href="https://seanzshow1.github.io/cinemaDash/controller.html" target="_blank" rel="noopener noreferrer">
           OPEN CONTROLLER
         </a>
       </div>
     </div>
 
-    <div class="foot">keys <span>&uarr;</span> jump <span>&darr;</span> duck &middot; <b>P</b> palette &middot; open only ONE display</div>
+    <div class="foot">keys <span>&uarr;</span> jump <span>&darr;</span> duck &middot; open one display only</div>
     <div class="conn" id="conn">connecting to room…</div>
   </div>
 
