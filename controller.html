@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+<title>Run to the Movies — Controller</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#1a0a16; --panel:#2a1424; --edge:#5a2c48;
+    --mint:#ffd23f; --amber:#ffe6a8; --coral:#ff5470;
+    --ink:#f6e9e0; --dim:#a07d90;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);
+    font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;-webkit-font-smoothing:antialiased;
+    overscroll-behavior:none;touch-action:manipulation}
+  body{display:flex;flex-direction:column;height:100dvh;padding:12px;gap:12px}
+  .bar{display:flex;align-items:center;justify-content:space-between;letter-spacing:.16em;font-size:12px;color:var(--dim)}
+  .bar .title{color:var(--mint);font-weight:800;font-family:'Press Start 2P',monospace;font-size:9px;text-shadow:0 0 12px rgba(255,210,63,.5)}
+  .bar b{color:var(--ink);font-variant-numeric:tabular-nums}
+  .tickbar{height:5px;background:#0c0c20;border:1px solid var(--edge);overflow:hidden}
+  .tickbar i{display:block;height:100%;width:0%;background:linear-gradient(90deg,var(--mint),var(--amber))}
+  .pad{flex:1;display:grid;grid-template-rows:1fr 1fr;gap:12px;min-height:0}
+  button{appearance:none;border:2px solid var(--edge);background:var(--panel);color:var(--ink);
+    border-radius:6px;font:inherit;cursor:pointer;position:relative;overflow:hidden;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;
+    letter-spacing:.16em;transition:transform .05s ease,border-color .12s ease}
+  button:active{transform:scale(.985)}
+  button .glyph{font-size:52px;font-weight:800;line-height:1}
+  button .label{font-family:'Press Start 2P',monospace;font-size:13px;font-weight:400}
+  button .tally{font-size:12px;color:var(--dim);font-variant-numeric:tabular-nums}
+  button .fill{position:absolute;left:0;bottom:0;width:100%;height:0%;z-index:0}
+  button>*{position:relative;z-index:1}
+  #up{color:var(--mint)} #up .fill{background:rgba(255,210,63,.16)}
+  #down{color:var(--coral)} #down .fill{background:rgba(255,84,112,.16)}
+  button.mine{border-color:currentColor}
+  button.pulse{border-color:var(--amber)}
+  .status{text-align:center;font-size:11px;color:var(--dim);letter-spacing:.1em;min-height:14px}
+  .status.bad{color:var(--coral)}
+</style>
+</head>
+<body>
+  <div class="bar">
+    <span class="title">RUN TO THE MOVIES</span>
+    <span>SCORE <b id="score">0</b> · BEST <b id="best">0</b></span>
+  </div>
+  <div class="tickbar"><i id="tickFill"></i></div>
+
+  <div class="pad">
+    <button id="up" aria-label="vote flap">
+      <span class="fill" id="fillUp"></span>
+      <span class="glyph">&#9650;</span>
+      <span class="label">JUMP</span>
+      <span class="tally" id="tallyUp">0 votes</span>
+    </button>
+    <button id="down" aria-label="vote dive">
+      <span class="fill" id="fillDown"></span>
+      <span class="glyph">&#9660;</span>
+      <span class="label">DUCK</span>
+      <span class="tally" id="tallyDown">0 votes</span>
+    </button>
+  </div>
+
+  <div class="status" id="status">connecting…</div>
+
+<script type="module">
+import { playhtml } from "https://unpkg.com/playhtml";
+
+/* ========= must match game.html ========= */
+const ROOM = "crowd-flight-01";
+const CHANNEL = "flight-state";
+const DEFAULT = { phase:"ready", score:0, best:0, tick:0, lastWin:null, votes:{} };
+/* ======================================== */
+
+const el = id => document.getElementById(id);
+const myId = "v-" + Math.random().toString(36).slice(2,9);
+let channel, shared = structuredClone(DEFAULT), myChoice=null, lastTick=0;
+
+const status = el("status");
+try{
+  await playhtml.init({ room: ROOM, onError: () => { status.textContent="offline"; status.classList.add("bad"); } });
+  channel = playhtml.createPageData(CHANNEL, structuredClone(DEFAULT));
+  channel.onUpdate(d => { shared=d; render(); });
+  status.textContent = "connected · room " + ROOM;
+}catch(e){
+  status.textContent = "could not load playhtml — check network";
+  status.classList.add("bad");
+}
+
+function vote(dir){
+  myChoice = dir;
+  if(channel) channel.setData(d => { (d.votes ||= {})[myId] = dir; });
+  else { (shared.votes ||= {})[myId] = dir; }
+  render();
+}
+el("up").addEventListener("click", () => vote("up"));
+el("down").addEventListener("click", () => vote("down"));
+
+function tally(v){ let up=0,down=0; for(const k in (v||{})){ const x=v[k]; if(x==="up")up++; else if(x==="down")down++; } return {up,down}; }
+
+function render(){
+  // a new tick means the display cleared votes; my choice no longer stands
+  if((shared.tick||0) !== lastTick){ lastTick=shared.tick||0; myChoice=null; }
+
+  el("score").textContent = shared.score||0;
+  el("best").textContent = shared.best||0;
+
+  const {up,down}=tally(shared.votes), tot=up+down;
+  el("tallyUp").textContent = up+" vote"+(up===1?"":"s");
+  el("tallyDown").textContent = down+" vote"+(down===1?"":"s");
+  el("fillUp").style.height = tot?(up/tot*100)+"%":"0%";
+  el("fillDown").style.height = tot?(down/tot*100)+"%":"0%";
+
+  const bUp=el("up"), bDown=el("down");
+  bUp.classList.toggle("mine", myChoice==="up");
+  bDown.classList.toggle("mine", myChoice==="down");
+  bUp.classList.toggle("pulse", shared.lastWin==="up");
+  bDown.classList.toggle("pulse", shared.lastWin==="down");
+
+  status.textContent = shared.phase==="playing" ? "running · vote every tick"
+    : shared.phase==="dead" ? "crashed · tap to run again"
+    : "tap JUMP or DUCK to start the run";
+}
+
+// smooth tick meter between updates
+const TICK=300; let t0=performance.now(), seenTick=0;
+function meter(now){
+  if((shared.tick||0)!==seenTick){ seenTick=shared.tick||0; t0=now; }
+  const frac=Math.min(1,(now-t0)/TICK);
+  el("tickFill").style.width=(frac*100)+"%";
+  requestAnimationFrame(meter);
+}
+requestAnimationFrame(meter);
+render();
+</script>
+</body>
+</html>

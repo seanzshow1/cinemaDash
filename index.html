@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Run to the Movies — Display</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#1a0a16; --panel:#2a1424; --edge:#5a2c48;
+    --cyan:#ffd23f; --magenta:#ff5470; --yellow:#ffe6a8; --green:#5CF285;
+    --ink:#f6e9e0; --dim:#a07d90;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:var(--bg);
+    color:var(--ink);font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;-webkit-font-smoothing:none}
+  body{display:flex;align-items:center;justify-content:center;padding:18px;overflow:hidden}
+  .cab{width:min(520px,100%,calc((100dvh - 230px)*0.8));display:flex;flex-direction:column;gap:12px}
+  .head{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+  .title{font-family:'Press Start 2P',monospace;font-size:11px;color:var(--cyan);text-shadow:0 0 14px rgba(255,210,63,.5);line-height:1.5}
+  .title span{color:var(--magenta);text-shadow:0 0 14px rgba(255,84,112,.5)}
+  .stats{display:flex;gap:16px;font-size:11px;color:var(--dim);letter-spacing:.14em;white-space:nowrap}
+  .stats b{color:var(--yellow);font-variant-numeric:tabular-nums}
+  .screen{position:relative;border:2px solid var(--edge);overflow:hidden;
+    box-shadow:0 0 0 1px #0a0a18,0 0 32px rgba(255,210,63,.12),0 24px 60px -30px rgba(0,0,0,.9);
+    aspect-ratio:4/5;background:#120610}
+  canvas{display:block;width:100%;height:100%;image-rendering:pixelated}
+  .overlay{position:absolute;inset:0;z-index:3;display:grid;place-content:center;gap:14px;text-align:center;
+    background:rgba(10,10,24,.82);padding:24px}
+  .overlay h2{margin:0;font-family:'Press Start 2P',monospace;font-size:20px;color:var(--yellow);text-shadow:3px 3px 0 #0a0a18,0 0 22px rgba(252,233,79,.45)}
+  .overlay p{margin:0;font-size:12px;color:var(--dim);line-height:1.8}
+  .overlay .big{color:var(--ink);font-size:12px;letter-spacing:.1em}
+  .overlay code{color:var(--cyan);background:#0c0c20;border:1px solid var(--edge);padding:2px 6px;word-break:break-all}
+  .hidden{display:none}
+  .tick{display:flex;align-items:center;gap:10px;font-size:10px;color:var(--dim);letter-spacing:.14em}
+  .tick .rail{flex:1;height:6px;background:#0c0c20;border:1px solid var(--edge);overflow:hidden}
+  .tick .fill{height:100%;width:0%;background:linear-gradient(90deg,var(--cyan),var(--yellow))}
+  .live{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .live .cell{position:relative;border:2px solid var(--edge);background:var(--panel);
+    padding:10px 14px;overflow:hidden;display:flex;align-items:center;gap:10px;font-size:12px;letter-spacing:.1em}
+  .live .bar{position:absolute;inset:0 auto 0 0;width:0%;background:rgba(255,210,63,.15);transition:width .1s ease}
+  .live .dive .bar{background:rgba(255,84,112,.15)}
+  .live .glyph{position:relative;z-index:1;font-weight:800;font-size:14px}
+  .live .flap .glyph{color:var(--cyan)} .live .dive .glyph{color:var(--magenta)}
+  .live .label{position:relative;z-index:1;font-family:'Press Start 2P',monospace;font-size:9px}
+  .live .flap .label{color:var(--cyan)} .live .dive .label{color:var(--magenta)}
+  .live .count{position:relative;z-index:1;margin-left:auto;font-variant-numeric:tabular-nums;color:var(--dim)}
+  .foot{font-size:10px;color:var(--dim);text-align:center;letter-spacing:.06em;line-height:1.8}
+  .foot span{color:var(--cyan)} .foot b{color:var(--yellow);font-weight:700}
+  .conn{font-size:10px;color:var(--dim);letter-spacing:.1em;text-align:center}
+  .conn.bad{color:var(--magenta)}
+  /* THIS WAY marquee sign, fixed to the right edge — points to the cinema */
+  .sign{position:absolute;right:0;top:44%;transform:translateY(-50%);z-index:2;
+    display:flex;flex-direction:column;align-items:center;gap:5px;
+    padding:8px 6px 8px 8px;background:#2a0f18;
+    border:2px solid var(--yellow);border-right:none;border-radius:6px 0 0 6px;
+    box-shadow:0 0 14px rgba(255,210,63,.35), inset 0 0 0 2px #120610;
+    animation:signGlow 1.1s steps(2) infinite}
+  @keyframes signGlow{0%{border-color:var(--yellow)}50%{border-color:#c9a15e}}
+  .sign .word{font-family:'Press Start 2P',monospace;font-size:8px;color:var(--yellow);
+    writing-mode:vertical-rl;text-orientation:upright;letter-spacing:2px;text-shadow:1px 1px 0 #120610}
+  .sign .arrow{font-size:16px;color:var(--magenta);line-height:1;text-shadow:0 0 8px rgba(255,84,112,.6)}
+  .sign .cinema{font-family:'Press Start 2P',monospace;font-size:6px;color:var(--dim);writing-mode:vertical-rl}
+</style>
+</head>
+<body>
+  <div class="cab">
+    <div class="head">
+      <div class="title">RUN TO<br><span>THE MOVIES</span></div>
+      <div class="stats">
+        <div>SCORE <b id="score">0</b></div>
+        <div>BEST <b id="best">0</b></div>
+        <div>VOTERS <b id="voters">0</b></div>
+      </div>
+    </div>
+
+    <div class="screen">
+      <canvas id="game" width="192" height="240"></canvas>
+      <div class="sign" id="sign">
+        <span class="cinema">CINEMA</span>
+        <span class="word">THIS WAY</span>
+        <span class="arrow">&#9654;</span>
+      </div>
+      <div class="overlay" id="overlay">
+        <h2 id="ovTitle">READY</h2>
+        <p class="big" id="ovBig">the crowd runs one moviegoer to the cinema</p>
+        <p id="ovSub">players open <code id="ctrlName">controller.html</code> and vote JUMP or DUCK</p>
+      </div>
+    </div>
+
+    <div class="tick">
+      <span>NEXT TICK</span>
+      <div class="rail"><div class="fill" id="tickFill"></div></div>
+      <span id="tickNum">0.30s</span>
+    </div>
+
+    <div class="live">
+      <div class="cell flap"><span class="bar" id="barUp"></span><span class="glyph">&#9650;</span>
+        <span class="label">JUMP</span><span class="count" id="cntUp">0</span></div>
+      <div class="cell dive"><span class="bar" id="barDown"></span><span class="glyph">&#9660;</span>
+        <span class="label">DUCK</span><span class="count" id="cntDown">0</span></div>
+    </div>
+
+    <div class="foot">keys <span>&uarr;</span> jump <span>&darr;</span> duck &middot; <b>P</b> palette &middot; open only ONE display</div>
+    <div class="conn" id="conn">connecting to room…</div>
+  </div>
+
+<script src="sprites.js"></script>
+<script type="module">
+import { playhtml } from "https://unpkg.com/playhtml";
+
+/* ========= must match controller.html ========= */
+const ROOM = "crowd-flight-01";      // same string on both pages
+const CHANNEL = "flight-state";      // same channel name on both pages
+const DEFAULT = { phase:"ready", score:0, best:0, tick:0, lastWin:null, votes:{} };
+/* ============================================== */
+
+// ---- tuning (192x240 pixel canvas) ----
+const W=192,H=240,FLOOR=H-16,TICK=300,GRAVITY=360,FLAP_V=-120,DIVE_V=120,VMAX=210;
+const PIPE_W=28,GAP=78,PIPE_SPEED=60,SPAWN_MS=1700,BIRD_X=52,BIRD_RX=9,BIRD_RY=6;
+
+// ---- art ----
+const S = window.CursedSprites;
+const CHAR = "runner";
+let PALKEY = localStorage.getItem("cof-pal") || "neon";
+if(!S.PAL[PALKEY]) PALKEY="neon";
+
+// ---- dom ----
+const el = id => document.getElementById(id);
+const canvas=el("game"), ctx=canvas.getContext("2d");
+ctx.imageSmoothingEnabled=false;
+el("ctrlName").textContent = location.href.replace(/game\.html.*$/,"") + "controller.html";
+
+// ---- connect to shared room ----
+const conn = el("conn");
+let channel, shared = structuredClone(DEFAULT);
+try {
+  await playhtml.init({ room: ROOM, onError: () => { conn.textContent="offline — running local only"; conn.classList.add("bad"); } });
+  channel = playhtml.createPageData(CHANNEL, structuredClone(DEFAULT));
+  channel.onUpdate(d => { shared = d; });
+  conn.textContent = "room " + ROOM + " · live";
+} catch (e) {
+  conn.textContent = "could not load playhtml — check network";
+  conn.classList.add("bad");
+}
+function writeShared(mutator){ if(channel) channel.setData(mutator); else mutator(shared); }
+
+// ---- local (host-only) physics + juice state ----
+const g = { y:H/2, vy:0, pipes:[], spawnT:0, tickAcc:0, score:0, pipeN:0,
+            scroll:0, sq:1, shake:0, flash:0, winFlash:0, win:null, parts:[], t:0 };
+
+function tally(votes){
+  let up=0,down=0;
+  for(const k in (votes||{})){ const v=votes[k]; if(v==="up")up++; else if(v==="down")down++; }
+  return {up,down};
+}
+
+function startRun(){
+  g.y=H/2; g.vy=0; g.pipes=[]; g.spawnT=0; g.tickAcc=0; g.score=0; g.pipeN=0; g.parts=[]; g.sq=1;
+  writeShared(d => { d.phase="playing"; d.score=0; d.votes={}; d.lastWin=null; });
+  el("overlay").classList.add("hidden");
+}
+function endRun(){
+  const best=Math.max(shared.best||0, g.score);
+  writeShared(d => { d.phase="dead"; d.best=best; });
+  el("best").textContent=best;
+  g.shake=1; g.flash=1;
+  showOverlay("WALLED IN","score "+g.score,"vote or press a key to run again");
+}
+function showOverlay(t,b,s){ el("ovTitle").textContent=t; el("ovBig").textContent=b; el("ovSub").innerHTML=s; el("overlay").classList.remove("hidden"); }
+
+function spawnPipe(){ const m=26, gapY=m+Math.random()*(FLOOR-GAP-m*2); g.pipes.push({x:W+PIPE_W,gapY,scored:false,idx:g.pipeN++}); }
+
+function puff(n,color){
+  for(let i=0;i<n;i++) g.parts.push({x:BIRD_X+(Math.random()*10-5), y:g.y+(Math.random()*10-5),
+    vx:-30-Math.random()*40, vy:(Math.random()-.5)*50, life:.5+Math.random()*.3, color});
+}
+
+// ---- loop ----
+let last=performance.now();
+function frame(now){
+  let dt=(now-last)/1000; last=now; if(dt>0.05)dt=0.05;
+  g.t+=dt;
+  const phase = shared.phase || "ready";
+
+  if(phase==="playing"){
+    // resolve vote windows
+    g.tickAcc += dt*1000;
+    while(g.tickAcc>=TICK){
+      const {up,down}=tally(shared.votes);
+      let win=null;
+      if(up>down){ g.vy=FLAP_V; win="up"; g.sq=1.35; }
+      else if(down>up){ g.vy=DIVE_V; win="down"; g.sq=0.75; }
+      writeShared(d => { d.tick=(d.tick||0)+1; d.lastWin=win; d.votes={}; d.score=g.score; });
+      if(win){ g.winFlash=0.22; g.win=win; }
+      g.tickAcc-=TICK;
+    }
+    // physics
+    g.vy=Math.max(-VMAX,Math.min(VMAX,g.vy+GRAVITY*dt));
+    g.y+=g.vy*dt;
+    g.scroll+=PIPE_SPEED*dt;
+    g.spawnT+=dt*1000; if(g.spawnT>=SPAWN_MS){ spawnPipe(); g.spawnT-=SPAWN_MS; }
+    for(const p of g.pipes) p.x-=PIPE_SPEED*dt;
+    g.pipes=g.pipes.filter(p=>p.x+PIPE_W>-10);
+    for(const p of g.pipes){
+      if(!p.scored && p.x+PIPE_W<BIRD_X-BIRD_RX){ p.scored=true; g.score++; el("score").textContent=g.score; puff(6,"Y"); }
+      const inX=BIRD_X+BIRD_RX>p.x && BIRD_X-BIRD_RX<p.x+PIPE_W;
+      if(inX && (g.y-BIRD_RY<p.gapY || g.y+BIRD_RY>p.gapY+GAP)) endRun();
+    }
+    if(g.y+BIRD_RY>FLOOR || g.y-BIRD_RY<0) endRun();
+  } else {
+    // idle: any vote starts / restarts
+    const {up,down}=tally(shared.votes);
+    if(up+down>0) startRun();
+  }
+
+  // juice decay
+  g.sq += (1-g.sq)*Math.min(1,dt*10);
+  g.shake=Math.max(0,g.shake-dt*3);
+  g.flash=Math.max(0,g.flash-dt*5);
+  g.winFlash=Math.max(0,g.winFlash-dt);
+  for(const pt of g.parts){ pt.x+=pt.vx*dt; pt.y+=pt.vy*dt; pt.life-=dt; }
+  g.parts=g.parts.filter(pt=>pt.life>0);
+
+  // readouts
+  const {up,down}=tally(shared.votes), tot=up+down;
+  el("cntUp").textContent=up; el("cntDown").textContent=down;
+  el("barUp").style.width = tot?(up/tot*100)+"%":"0%";
+  el("barDown").style.width = tot?(down/tot*100)+"%":"0%";
+  el("voters").textContent = tot;
+  const frac = phase==="playing" ? g.tickAcc/TICK : 0;
+  el("tickFill").style.width=(frac*100)+"%";
+  el("tickNum").textContent=(Math.max(0,TICK-g.tickAcc)/1000).toFixed(2)+"s";
+
+  render(phase, up, down, tot);
+  requestAnimationFrame(frame);
+}
+
+function render(phase, up, down, tot){
+  const pal = S.PAL[PALKEY];
+  ctx.save();
+  if(g.shake>0) ctx.translate(Math.round((Math.random()-.5)*5*g.shake), Math.round((Math.random()-.5)*5*g.shake));
+
+  S.drawBackground(ctx, pal, g.scroll, W, H);
+  for(const p of g.pipes) S.drawPillar(ctx, pal, p.x, p.gapY, GAP, PIPE_W, H, p.idx);
+
+  // particles
+  for(const pt of g.parts){ ctx.fillStyle=pal[pt.color]||pal.Y; ctx.fillRect(Math.round(pt.x),Math.round(pt.y),pt.life>0.3?2:1,pt.life>0.3?2:1); }
+
+  // the moviegoer
+  let frame;
+  if(phase==="dead") frame="dead";
+  else if(g.vy<-25) frame="jump";
+  else if(g.vy>45) frame="duck";
+  else frame = (Math.floor(g.t*9)%2) ? "run1" : "run2";
+  const bob = phase==="playing" ? 0 : Math.round(Math.sin(g.t*3)*2);
+  S.drawSprite(ctx, CHAR, frame, PALKEY, BIRD_X, g.y+bob, g.sq, 2-g.sq);
+
+  // in-canvas crowd meter + score
+  const upFrac = tot?up/tot:0, downFrac = tot?down/tot:0;
+  S.drawMeter(ctx, pal, upFrac, downFrac, g.winFlash>0?g.win:null, W, H);
+  S.drawDigits(ctx, String(g.score), W/2, 6, 2, pal.Y, pal.K);
+
+  if(g.flash>0){ ctx.fillStyle="rgba(255,255,255,"+(g.flash*.9)+")"; ctx.fillRect(-6,-6,W+12,H+12); }
+  ctx.restore();
+}
+
+// this display can also vote via keyboard (handy for solo testing)
+const kbdId="display-kbd";
+addEventListener("keydown", e=>{
+  if(e.code==="Space"||e.code==="ArrowUp"){ e.preventDefault(); writeShared(d=>{ (d.votes ||= {})[kbdId]="up"; }); }
+  else if(e.code==="ArrowDown"){ e.preventDefault(); writeShared(d=>{ (d.votes ||= {})[kbdId]="down"; }); }
+  else if(e.code==="KeyP"){ PALKEY = PALKEY==="neon"?"dusk":"neon"; localStorage.setItem("cof-pal",PALKEY); }
+});
+
+el("best").textContent = shared.best||0;
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

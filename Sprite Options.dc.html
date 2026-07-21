@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics><meta name="design_doc_mode" content="canvas"><link rel="preconnect" href="https://fonts.gstatic.com"><link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet"><style>body{margin:0;background:#160812;font-family:ui-monospace,Menlo,monospace}a{color:#ffd23f}a:hover{color:#ff5470}.dv-turn{padding:40px 44px 32px;border-bottom:1px solid rgba(255,255,255,.08);scroll-margin-top:16px}.dv-thd{display:flex;align-items:baseline;gap:10px;margin:0 0 20px}.dv-tid{font:600 10px ui-monospace,Menlo,monospace;padding:3px 7px;background:#ffd23f;color:#1a0a16;border-radius:4px;text-decoration:none}.dv-tname{font-family:'Press Start 2P',monospace;font-size:11px;color:#fff}.dv-opts{display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start}.dv-opt{flex:none;display:flex;flex-direction:column;gap:9px;scroll-margin-top:16px}.dv-oid{font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(255,255,255,.12);color:#fff;border-radius:5px;text-decoration:none}.dv-olabel{display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 ui-monospace,monospace;color:rgba(255,255,255,.6);letter-spacing:.08em}.dv-card{max-width:100%;background:#1a0a16;border:1px solid rgba(255,210,63,.25);border-radius:4px;overflow:hidden}.dv-opt:target .dv-oid{background:#ffd23f;color:#1a0a16}.dv-next{margin:22px 0 0;font:12px/1.5 ui-monospace,monospace;color:rgba(255,255,255,.45)}</style></helmet>
+<section class="dv-turn" id="t2">
+  <div class="dv-thd"><a class="dv-tid" href="#t2">2</a><span class="dv-tname">RUN TO THE MOVIES</span></div>
+  <div style="font:11px/1.6 ui-monospace,monospace;color:rgba(255,255,255,.5);margin:-8px 0 18px;max-width:660px">New direction: a moviegoer sprinting to the cinema, a THIS WAY marquee sign on the right, and marquee-trimmed brick walls in the way. Row 1 — the runner's frames. Row 2 — the framed play scene in bright marquee vs dim noir. All rendering live from the game's own art.</div>
+  <div class="dv-opts" style="margin-bottom:30px">
+    <div class="dv-opt" id="2a">
+      <div class="dv-olabel"><a class="dv-oid" href="#2a">2a</a>THE MOVIEGOER — run / jump / duck / crashed</div>
+      <div class="dv-card" style="display:flex;gap:6px;padding:16px">
+        <div style="display:flex;flex-direction:column;gap:6px;align-items:center"><x-import component-from-global-scope="sprite-view" from="./uploads/sprites.js" char="runner" frame="run1" scale="7" hint-size="56px,84px"></x-import><span style="font-family:'Press Start 2P',monospace;font-size:7px;color:#ffd23f">RUN A</span></div>
+        <div style="display:flex;flex-direction:column;gap:6px;align-items:center"><x-import component-from-global-scope="sprite-view" from="./uploads/sprites.js" char="runner" frame="run2" scale="7" hint-size="56px,84px"></x-import><span style="font-family:'Press Start 2P',monospace;font-size:7px;color:#ffd23f">RUN B</span></div>
+        <div style="display:flex;flex-direction:column;gap:6px;align-items:center"><x-import component-from-global-scope="sprite-view" from="./uploads/sprites.js" char="runner" frame="jump" scale="7" hint-size="56px,84px"></x-import><span style="font-family:'Press Start 2P',monospace;font-size:7px;color:#5cf285">JUMP</span></div>
+        <div style="display:flex;flex-direction:column;gap:6px;align-items:center"><x-import component-from-global-scope="sprite-view" from="./uploads/sprites.js" char="runner" frame="duck" scale="7" hint-size="56px,84px"></x-import><span style="font-family:'Press Start 2P',monospace;font-size:7px;color:#33e0ff">DUCK</span></div>
+        <div style="display:flex;flex-direction:column;gap:6px;align-items:center"><x-import component-from-global-scope="sprite-view" from="./uploads/sprites.js" char="runner" frame="dead" scale="7" hint-size="56px,84px"></x-import><span style="font-family:'Press Start 2P',monospace;font-size:7px;color:#ff5470">CRASH</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="dv-opts">
+    <div class="dv-opt" id="2b">
+      <div class="dv-olabel"><a class="dv-oid" href="#2b">2b</a>MARQUEE — bright, max glow for stream</div>
+      <div class="dv-card"><x-import component-from-global-scope="scene-view" from="./uploads/sprites.js" char="runner" palette="neon" scale="1.6" hint-size="308px,384px"></x-import></div>
+    </div>
+    <div class="dv-opt" id="2c">
+      <div class="dv-olabel"><a class="dv-oid" href="#2c">2c</a>NOIR — dimmed, calmer under crowd UI</div>
+      <div class="dv-card"><x-import component-from-global-scope="scene-view" from="./uploads/sprites.js" char="runner" palette="dusk" scale="1.6" hint-size="308px,384px"></x-import></div>
+    </div>
+  </div>
+  <p class="dv-next">Try next: "give him a popcorn bucket" · "make the sign a full movie marquee with bulbs" · "add a film-reel obstacle"</p>
+</section>
+</x-dc>
+</body>
+</html>
