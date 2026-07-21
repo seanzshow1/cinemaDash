@@ -62,7 +62,65 @@
     writing-mode:vertical-rl;text-orientation:upright;letter-spacing:2px;text-shadow:1px 1px 0 #120610}
   .sign .arrow{font-size:16px;color:var(--magenta);line-height:1;text-shadow:0 0 8px rgba(255,84,112,.6)}
   .sign .cinema{font-family:'Press Start 2P',monospace;font-size:6px;color:var(--dim);writing-mode:vertical-rl}
-</style
+
+  .controller-access{
+    display:grid;
+    grid-template-columns:auto 1fr;
+    align-items:center;
+    gap:14px;
+    padding:12px;
+    border:2px solid var(--edge);
+    background:var(--panel);
+  }
+  .controller-qr{
+    width:92px;
+    height:92px;
+    display:block;
+    padding:5px;
+    background:#fff;
+    image-rendering:auto;
+  }
+  .controller-copy{
+    min-width:0;
+    display:flex;
+    flex-direction:column;
+    align-items:flex-start;
+    gap:9px;
+  }
+  .controller-copy p{
+    margin:0;
+    color:var(--dim);
+    font-size:10px;
+    line-height:1.6;
+    letter-spacing:.06em;
+  }
+  .controller-button{
+    display:inline-block;
+    padding:11px 14px;
+    border:2px solid var(--yellow);
+    background:#2a0f18;
+    color:var(--yellow);
+    font-family:'Press Start 2P',monospace;
+    font-size:8px;
+    line-height:1.5;
+    text-decoration:none;
+    text-align:center;
+    box-shadow:3px 3px 0 #120610,0 0 14px rgba(255,210,63,.22);
+  }
+  .controller-button:hover,
+  .controller-button:focus-visible{
+    color:var(--bg);
+    background:var(--yellow);
+    outline:none;
+  }
+  @media (max-height:760px), (max-width:430px){
+    .controller-access{grid-template-columns:72px 1fr;gap:10px;padding:9px}
+    .controller-qr{width:72px;height:72px}
+    .controller-button{padding:9px 10px;font-size:7px}
+    .controller-copy p{font-size:9px}
+  }
+
+</style>
   <link rel="icon" type="image/gif" href="/popcorn.gif">
 </head>
 <body>
@@ -103,6 +161,16 @@
         <span class="label">DUCK</span><span class="count" id="cntDown">0</span></div>
     </div>
 
+    <div class="controller-access">
+      <img class="controller-qr" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAUgAAAFIAQAAAAAab1qeAAACF0lEQVR4nO2a7YrjMAxF7132/V/5zA99JB1YaAaytTMqtE3rA7aFrSvJNnrz9eddcMghhxzyV5B/JcnxjCQjC8nkc7fsMqMF7CmksKqRsCyMX1q2mdESpG1JsuRck2HYbllknJuRIBlE+4D/2fvzyFyLloQw/ybv6P0JZPjPcJNyaBBIFvFn23SXGa1gz9rcmBR2LHMI/E29P4/093wzrIhkrHPjLjNagAxZd7hPy7Uu8azPi+RpvyPh9JrxlOb0xPMXSYRoCQpdcqi8yyWsMM5NSIQtLNdWNzrkfplx7kKGGSv2JIUdgY7QfoFx7kNiyEqIqigSGXzm8YuMc3myNrawwoXWu/P4tPIuM1qARMiAhQWWkDOP7wxpgXFuRKKwoHrTh0PF38k7en8O6Soid6Ez/GZZ1pmCfnqcu5DpPzm50Kwhc7ROPH+NJOvyED9sOQrJdhRF1xjnNiSZCem81VvZJ/68XP9UaVG+iKRp8qOrZJ9vVk1eR/BJGXTO466RmVmSLpSsgbgc6uj722TKuCsf4vjK0JPR96v27B+q4nxU6EUFoR8f5y6kTzLU2uO+IBK+c/b72+TL/RCrrZdZEccB5y4zWoKMWyB5kyGXq1WR/d29P5UMKSJXJVVhmvzohyT1ddTqj0POhca5MPlyPyQvNLjDJuVR3V29P48U0MbMzzJhCxIAu8xogXjpY70POeSQQ+5LfgGiGvZ/i0FgaQAAAABJRU5ErkJggg==" alt="QR code for the Cinema Dash controller">
+      <div class="controller-copy">
+        <p>SCAN TO JOIN, OR OPEN THE CONTROLLER ON THIS DEVICE.</p>
+        <a class="controller-button" href="https://seanzshow1.github.io/cinemaDash/controller.html" target="_blank" rel="noopener noreferrer">
+          OPEN CONTROLLER
+        </a>
+      </div>
+    </div>
+
     <div class="foot">keys <span>&uarr;</span> jump <span>&darr;</span> duck &middot; <b>P</b> palette &middot; open only ONE display</div>
     <div class="conn" id="conn">connecting to room…</div>
   </div>
@@ -131,7 +199,7 @@ if(!S.PAL[PALKEY]) PALKEY="neon";
 const el = id => document.getElementById(id);
 const canvas=el("game"), ctx=canvas.getContext("2d");
 ctx.imageSmoothingEnabled=false;
-el("ctrlName").textContent = location.href.replace(/game\.html.*$/,"") + "controller.html";
+el("ctrlName").textContent = "https://seanzshow1.github.io/cinemaDash/controller.html";
 
 // ---- connect to shared room ----
 const conn = el("conn");
